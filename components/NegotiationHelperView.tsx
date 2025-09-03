@@ -81,12 +81,78 @@ const NegotiationHelperView: React.FC<NegotiationHelperViewProps> = ({
   activeClauseIndex,
   setActiveClauseIndex,
 }) => {
-  const clauses = analysisResult.clauses;
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleCardClick = (index: number) => {
     const docClause = document.getElementById(`doc-clause-${index}`);
     docClause?.scrollIntoView({ behavior: "smooth", block: "center" });
     setActiveClauseIndex(index);
+  };
+
+  const buildRephrasedDraft = (): string => {
+    return analysisResult.clauses
+      .map((c, i) => {
+        const body =
+          c.suggestedRewrite && c.suggestedRewrite.trim().length > 0
+            ? c.suggestedRewrite.trim()
+            : c.clauseText.trim();
+        return `Clause ${i + 1}:\n${body}`;
+      })
+      .join("\n\n");
+  };
+
+  const buildCounterTips = (): string[] => {
+    return analysisResult.clauses.map(
+      (c, i) => `Clause ${i + 1}: ${c.negotiationSuggestion}`
+    );
+  };
+
+  const exportRephrasedPdf = () => {
+    // @ts-ignore
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 48;
+    let y = margin;
+
+    const addTitle = (text: string) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(text, margin, y);
+      y += 18;
+    };
+    const addParagraph = (text: string, font: "normal" | "bold" = "normal") => {
+      doc.setFont("helvetica", font as any);
+      doc.setFontSize(11);
+      const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
+      lines.forEach((line: string) => {
+        if (y + 14 > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += 14;
+      });
+      y += 6;
+    };
+    const addSection = (title: string) => {
+      if (y + 24 > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(title, margin, y);
+      y += 16;
+    };
+
+    addTitle("UnBind: Balanced Rephrased Contract");
+    addSection("Balanced Rephrased Draft");
+    addParagraph(buildRephrasedDraft());
+    addSection("Counter Tips for Negotiation");
+    buildCounterTips().forEach((tip) => addParagraph(`• ${tip}`));
+    doc.save("UnBind-Balanced-Rephrased-Contract.pdf");
   };
 
   return (
@@ -100,9 +166,46 @@ const NegotiationHelperView: React.FC<NegotiationHelperViewProps> = ({
             strategic advice.
           </p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowPreview((s) => !s)}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-300 bg-indigo-900/40 border border-indigo-500/50 rounded-md hover:bg-indigo-900/70 transition-colors"
+          >
+            {showPreview ? "Hide Rephrased Preview" : "Preview Rephrased Draft"}
+          </button>
+          <button
+            type="button"
+            onClick={exportRephrasedPdf}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-300 bg-indigo-900/40 border border-indigo-500/50 rounded-md hover:bg-indigo-900/70 transition-colors"
+          >
+            Export Rephrased PDF
+          </button>
+        </div>
       </div>
+
+      {showPreview && (
+        <div className="p-4 rounded-lg border border-indigo-500/20 bg-gray-800/30">
+          <h4 className="font-semibold text-indigo-300 mb-2">
+            Balanced Rephrased Draft (Preview)
+          </h4>
+          <pre className="whitespace-pre-wrap text-sm text-gray-200 leading-relaxed">
+            {buildRephrasedDraft()}
+          </pre>
+          <div className="mt-4">
+            <h5 className="text-sm font-semibold text-gray-300 mb-1">
+              Counter Tips
+            </h5>
+            <ul className="list-disc ml-6 text-sm text-gray-200">
+              {buildCounterTips().map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       <div className="space-y-5">
-        {clauses.map((clause, index) => (
+        {analysisResult.clauses.map((clause, index) => (
           <NegotiationCard
             key={index}
             clause={clause}
