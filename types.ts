@@ -11,6 +11,7 @@ export interface ClauseAnalysis {
     riskLevel: RiskLevel;
     riskReason: string;
     negotiationSuggestion: string;
+    suggestedRewrite?: string;
 }
 
 export interface KeyTerm {
