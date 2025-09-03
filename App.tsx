@@ -130,9 +130,20 @@ function AppRoutes() {
                 setLoadingMessage(`Extracting page ${i}/${pdf.numPages}...`);
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
+                
+                // Enhanced text extraction with better spacing
                 const pageText = textContent.items
-                  .map((s: any) => s.str)
-                  .join(" ");
+                  .map((item: any) => {
+                    // Preserve spacing and line breaks
+                    if (item.hasEOL) {
+                      return item.str + '\n';
+                    }
+                    return item.str;
+                  })
+                  .join(' ')
+                  .replace(/\s+/g, ' ') // Normalize spaces
+                  .trim();
+                
                 fullText += pageText + "\n\n";
               }
               resolve(fullText);

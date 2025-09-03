@@ -10,6 +10,7 @@ const RISK_WEIGHTS: { [key in RiskLevel]: number } = {
     [RiskLevel.Medium]: 2,
     [RiskLevel.Low]: 1,
     [RiskLevel.Negligible]: 0,
+    [RiskLevel.NoRisk]: 0, // No Risk clauses don't contribute to risk score
 };
 
 const getScoreColor = (score: number) => {
@@ -32,8 +33,14 @@ const RiskMeter: React.FC<RiskMeterProps> = ({ clauses }) => {
 
     const overallScore = useMemo(() => {
         if (!clauses || clauses.length === 0) return 0;
-        const totalPossibleScore = clauses.length * RISK_WEIGHTS.High;
-        const actualScore = clauses.reduce((acc, clause) => acc + RISK_WEIGHTS[clause.riskLevel], 0);
+        
+        // Filter out "No Risk" clauses from risk calculation
+        const riskClauses = clauses.filter(clause => clause.riskLevel !== RiskLevel.NoRisk);
+        
+        if (riskClauses.length === 0) return 0; // If all clauses are "No Risk", score is 0
+        
+        const totalPossibleScore = riskClauses.length * RISK_WEIGHTS.High;
+        const actualScore = riskClauses.reduce((acc, clause) => acc + RISK_WEIGHTS[clause.riskLevel], 0);
         return totalPossibleScore > 0 ? (actualScore / totalPossibleScore) * 100 : 0;
     }, [clauses]);
     

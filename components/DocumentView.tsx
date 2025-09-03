@@ -197,8 +197,34 @@ const DocumentView: React.FC<DocumentViewProps> = ({ documentText, clauses, acti
                                              /^(SECTION|CHAPTER|PART|ARTICLE|CLAUSE)/i.test(line));
                                         
                                         if (isHeading) {
+                                            // Determine heading level and styling
+                                            let headingClass = "text-xl font-bold text-gray-800 mt-8 mb-4 first:mt-0 bg-gray-100 px-4 py-2 rounded-lg border-l-4 border-indigo-500";
+                                            
+                                            // Check for different heading levels
+                                            if (/^\d+\.\s/.test(line)) {
+                                                const match = line.match(/^(\d+(?:\.\d+)*)\.?\s/);
+                                                if (match) {
+                                                    const level = match[1].split('.').length;
+                                                    
+                                                    // Different styling for different levels
+                                                    if (level === 1) {
+                                                        headingClass = "text-2xl font-bold text-gray-900 mt-8 mb-4 first:mt-0 bg-indigo-50 px-4 py-3 rounded-lg border-l-4 border-indigo-600 shadow-sm";
+                                                    } else if (level === 2) {
+                                                        headingClass = "text-xl font-bold text-gray-800 mt-6 mb-3 bg-blue-50 px-3 py-2 rounded-lg border-l-4 border-blue-500";
+                                                    } else {
+                                                        headingClass = "text-lg font-semibold text-gray-700 mt-4 mb-2 bg-gray-50 px-3 py-1 rounded border-l-3 border-gray-400";
+                                                    }
+                                                }
+                                            } else if (line === line.toUpperCase() && line.length > 5) {
+                                                // All caps headings (main titles)
+                                                headingClass = "text-3xl font-bold text-gray-900 mt-10 mb-6 first:mt-0 bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 rounded-xl border-l-6 border-indigo-600 shadow-md";
+                                            } else if (/^(SECTION|CHAPTER|PART|ARTICLE|CLAUSE)/i.test(line)) {
+                                                // Keyword-based headings
+                                                headingClass = "text-xl font-bold text-gray-800 mt-6 mb-3 bg-yellow-50 px-4 py-2 rounded-lg border-l-4 border-yellow-500";
+                                            }
+                                            
                                             return (
-                                                <h3 key={lineIndex} className="text-lg font-bold text-gray-800 mt-6 mb-3 first:mt-0">
+                                                <h3 key={lineIndex} className={headingClass}>
                                                     {line}
                                                 </h3>
                                             );
@@ -228,6 +254,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ documentText, clauses, acti
                                     case 'Medium': return 'hover:bg-yellow-100 hover:border-yellow-300';
                                     case 'Low': return 'hover:bg-green-100 hover:border-green-300';
                                     case 'Negligible': return 'hover:bg-blue-100 hover:border-blue-300';
+                                    case 'No Risk': return 'hover:bg-gray-100 hover:border-gray-300';
                                     default: return 'hover:bg-gray-100 hover:border-gray-300';
                                 }
                             };
@@ -238,6 +265,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ documentText, clauses, acti
                                     case 'Medium': return 'bg-yellow-200 border-yellow-400 shadow-yellow-200';
                                     case 'Low': return 'bg-green-200 border-green-400 shadow-green-200';
                                     case 'Negligible': return 'bg-blue-200 border-blue-400 shadow-blue-200';
+                                    case 'No Risk': return 'bg-gray-200 border-gray-400 shadow-gray-200';
                                     default: return 'bg-gray-200 border-gray-400 shadow-gray-200';
                                 }
                             };
@@ -260,7 +288,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ documentText, clauses, acti
                                     }}
                                     onMouseEnter={() => setActiveClauseIndex(clause.originalIndex)}
                                     onMouseLeave={() => setActiveClauseIndex(null)}
-                                    title={`${clause.riskLevel} Risk: ${clause.simplifiedExplanation}`}
+                                    title={`${clause.riskLevel === 'No Risk' ? 'No Risk' : `${clause.riskLevel} Risk`}: ${clause.simplifiedExplanation}`}
                                 >
                                     {clause.clauseText}
                                 </span>

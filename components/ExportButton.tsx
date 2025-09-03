@@ -75,7 +75,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({ analysisResult }) => {
             
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Clause ${index + 1}: ${clause.riskLevel} Risk`, 14, y);
+            doc.text(`Clause ${index + 1}: ${clause.riskLevel === 'No Risk' ? 'No Risk' : `${clause.riskLevel} Risk`}`, 14, y);
             y += 7;
 
             doc.setFontSize(10);

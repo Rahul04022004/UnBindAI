@@ -43,4 +43,12 @@ export const RISK_COLORS: { [key in RiskLevel]: { text: string; bg: string; bord
         gradientTo: 'to-gray-900/10',
         glow: 'hover:shadow-blue-500/20',
     },
+    [RiskLevel.NoRisk]: {
+        text: 'text-gray-300',
+        bg: 'bg-gray-900/20',
+        border: 'border-gray-500/50',
+        gradientFrom: 'from-gray-500/20',
+        gradientTo: 'to-gray-900/10',
+        glow: 'hover:shadow-gray-500/20',
+    },
 };
