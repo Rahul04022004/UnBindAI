@@ -36,12 +36,13 @@ const analyzeChunk = async (
     {
       role: "system",
       content:
-        "You are an expert legal AI assistant. Extract and analyze only meaningful legal clauses from a text chunk.\n" +
+        "You help people with below-average literacy. Extract only meaningful legal clauses from a text chunk.\n" +
         '- Be conservative: if a clause is standard/neutral, set riskLevel to "Negligible".\n' +
-        "- Only assign Low/Medium/High when there is a concrete, non-ambiguous harm or imbalance for the user, with a clear mechanism (what, how, consequence).\n" +
-        '- Do NOT invent risks. If uncertain, prefer "Negligible".\n' +
-        "- Explanations must be brief and plain-English, focusing on what it means for the user.\n" +
-        "- negotiationSuggestion should be a short, practical wording change (or say it is fair as-is).\n" +
+        "- Only assign Low/Medium/High when there is a clear harm or imbalance for the user.\n" +
+        "- Use simple words at about a 6th-grade level. Keep it short.\n" +
+        '- simplifiedExplanation: 1–2 short sentences in plain language. If helpful, add one tiny example starting with "Example:".\n' +
+        '- riskReason (Potential Risk): 1–2 short sentences saying what could go wrong. If helpful, add one tiny example starting with "Example:".\n' +
+        "- negotiationSuggestion: 1 short sentence suggesting a safer tweak (or say it is fair).\n" +
         "Return JSON only with a clauses array of objects: { clauseText, simplifiedExplanation, riskLevel in [Low, Medium, High, Negligible], riskReason, negotiationSuggestion }.",
     },
     {
@@ -76,10 +77,11 @@ const synthesizeReport = async (
     {
       role: "system",
       content:
-        "You are an expert legal AI assistant. Synthesize a high-level report from pre-analyzed legal clauses.\n" +
-        "- Keep the summary concise and practical.\n" +
-        "- If most clauses are standard with negligible risk, explicitly note that overall risk appears low and typical.\n" +
-        '- Only list "missingClauses" if commonly expected for the inferred contract type; avoid over-flagging.\n' +
+        "You help laypeople. Use simple, short sentences. Avoid jargon.\n" +
+        "- summary: max 4 short sentences in plain language.\n" +
+        "- keyTerms: definition in 1 simple sentence each.\n" +
+        "- keyDates: description in 1 short sentence each.\n" +
+        "- missingClauses: reason in 1 short sentence.\n" +
         "Return JSON only with: summary (string), keyTerms (array of {term, definition}), keyDates (array of {date, description}), missingClauses (array of {clauseName, reason}).",
     },
     {
@@ -185,11 +187,11 @@ export const simulateImpact = async (
       {
         role: "system",
         content:
-          "You are an expert legal AI assistant. Given contract excerpts and a hypothetical scenario, explain likely legal and financial consequences in clear, step-by-step language for a non-lawyer.",
+          'You help people with below-average literacy. Answer simply in plain words. Use up to 5 bullet points, each 1–2 short sentences, no jargon. If helpful, include 1 tiny example starting with "Example:".',
       },
       {
         role: "user",
-        content: `Scenario: ${scenario}\n\nContract Excerpts:\n${context}`,
+        content: `Scenario: ${scenario}\n\nContract Excerpts:\n${context}\n\nWrite the answer in very simple words. Keep it under 300 words.`,
       },
     ],
     "llama-3.3-70b-versatile",
