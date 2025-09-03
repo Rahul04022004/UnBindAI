@@ -3,9 +3,10 @@ import { UploadCloudIcon, FileTextIcon, SparklesIcon } from './Icons';
 
 interface FileUploadProps {
   onStartAnalysis: (file: File, role: string) => void;
+  onBack: () => void;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onStartAnalysis }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onStartAnalysis, onBack }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [role, setRole] = useState('');
@@ -49,6 +50,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onStartAnalysis }) => {
 
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center fade-in">
+      <div className="w-full max-w-3xl mb-4 text-left">
+        <button onClick={onBack} className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">&larr; Back to Dashboard</button>
+      </div>
       <div className="max-w-3xl">
         <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Transform Legal Docs into Clear Insights</h2>
         <p className="mt-6 text-lg leading-8 text-gray-400">

@@ -229,7 +229,7 @@ export default function App(): React.ReactElement {
               }}
             />
           );
-        return <FileUpload onStartAnalysis={handleStartAnalysis} />;
+        return <FileUpload onStartAnalysis={handleStartAnalysis} onBack={() => setView("dashboard")} />;
       case "analysis_result":
         if (error)
           return (
