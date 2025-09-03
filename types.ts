@@ -3,6 +3,7 @@ export enum RiskLevel {
     Medium = 'Medium',
     High = 'High',
     Negligible = 'Negligible',
+    NoRisk = 'No Risk',
 }
 
 export interface ClauseAnalysis {

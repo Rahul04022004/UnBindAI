@@ -1,6 +1,7 @@
 import { embedTexts, chatComplete } from "./groqService";
-import type { AnalysisResponse, ClauseAnalysis, MissingClause, ChunkSummary } from "../types";
+import type { AnalysisResponse, ClauseAnalysis, MissingClause, ChunkSummary, RiskLevel } from "../types";
 import { processPdfText } from "./pdfProcessingService";
+import { convertPdfToMarkdown } from "./pdfToMarkdownService";
 
 // --- Utilities ---
 const tryParseJson = <T>(text: string): T | null => {
@@ -260,17 +261,18 @@ const analyzeChunk = async (
         "IMPORTANT: Do not skip any content. Every section, paragraph, or clause must be analyzed and included in your response.\n" +
         "\n" +
         "For each piece of content:\n" +
-        "- If it's a standard/neutral clause with no risk, set riskLevel to 'Negligible' and provide a full explanation\n" +
+        "- If it's a standard/neutral clause with NO risk at all, set riskLevel to 'No Risk' and provide only a summary explanation\n" +
+        "- If it's a standard clause with minimal risk, set riskLevel to 'Negligible' and provide full explanation\n" +
         "- If there's potential harm or imbalance, assign Low/Medium/High risk levels\n" +
         "- Use simple words at about a 6th-grade level. Keep explanations clear and helpful\n" +
         "\n" +
         "Required fields for each clause:\n" +
         "- clauseText: The actual text being analyzed (can be a sentence, paragraph, or section)\n" +
-        "- simplifiedExplanation: 1–2 sentences explaining what this means in plain language. For negligible risk, still provide a full explanation.\n" +
-        "- riskLevel: One of [Low, Medium, High, Negligible]\n" +
-        "- riskReason: For negligible risk, explain why it's safe/standard. For other risks, explain what could go wrong.\n" +
-        "- negotiationSuggestion: For negligible risk, say it's fair/standard. For other risks, suggest improvements.\n" +
-        "- suggestedRewrite: For negligible risk, you can say 'No changes needed' or provide the same text. For other risks, provide a safer version.\n" +
+        "- simplifiedExplanation: 1–2 sentences explaining what this means in plain language\n" +
+        "- riskLevel: One of [Low, Medium, High, Negligible, No Risk]\n" +
+        "- riskReason: For No Risk, just say 'No risk identified'. For other risks, explain what could go wrong.\n" +
+        "- negotiationSuggestion: For No Risk, say 'No changes needed'. For other risks, suggest improvements.\n" +
+        "- suggestedRewrite: For No Risk, say 'No changes needed'. For other risks, provide a safer version.\n" +
         "\n" +
         "Return JSON only with a clauses array. Make sure to cover ALL content in the chunk, not just risky parts.",
     },
@@ -458,8 +460,15 @@ export const analyzeContract = async (
     role 
   });
 
+  onProgress("Converting PDF to Markdown for better parsing...");
+  const markdownText = convertPdfToMarkdown(documentText);
+  console.log('analyzeContract: Converted to Markdown', { 
+    originalLength: documentText.length,
+    markdownLength: markdownText.length 
+  });
+
   onProgress("Chunking document...");
-  const chunks = chunkText(documentText);
+  const chunks = chunkText(markdownText);
   console.log('analyzeContract: Created chunks', { chunkCount: chunks.length });
 
   onProgress(`Analyzing ${chunks.length} document section(s)...`);

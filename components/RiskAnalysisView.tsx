@@ -16,6 +16,7 @@ const RiskIcon = ({ riskLevel }: { riskLevel: RiskLevel }) => {
         case 'Medium': return <AlertTriangleIcon className="h-5 w-5 text-yellow-300" />;
         case 'Low': return <ShieldCheckIcon className="h-5 w-5 text-green-300" />;
         case 'Negligible': return <CheckCircleIcon className="h-5 w-5 text-blue-300" />;
+        case 'No Risk': return <CheckCircleIcon className="h-5 w-5 text-gray-300" />;
         default: return null;
     }
 };
@@ -33,7 +34,7 @@ const ClauseCard: React.FC<{ clause: ClauseAnalysis; index: number; isActive: bo
       <div className="flex justify-between items-start mb-3">
         <div className={`flex items-center space-x-2 font-semibold text-lg ${colors.text}`}>
             <RiskIcon riskLevel={clause.riskLevel} />
-            <span>{clause.riskLevel} Risk</span>
+            <span>{clause.riskLevel === 'No Risk' ? 'No Risk' : `${clause.riskLevel} Risk`}</span>
         </div>
       </div>
 
