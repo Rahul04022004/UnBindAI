@@ -5,7 +5,6 @@ export const APP_NAME = 'UnBind';
 export const TABS = {
     RISK_ANALYSIS: 'Risk Analysis',
     NEGOTIATION_HELPER: 'Negotiation Helper',
-    IMPACT_SIMULATOR: 'Impact Simulator',
     KEY_TERMS_GLOSSARY: 'Key Terms Glossary',
     KEY_DATES: 'Key Dates',
 };

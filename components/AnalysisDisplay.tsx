@@ -3,7 +3,6 @@ import { TABS } from '../constants';
 import type { AnalysisResponse } from '../types';
 import RiskAnalysisView from './RiskAnalysisView';
 import NegotiationHelperView from './NegotiationHelperView';
-import ImpactSimulatorView from './ImpactSimulatorView';
 import KeyTermsView from './KeyTermsView';
 import KeyDatesView from './KeyDatesView';
 import ExportButton from './ExportButton';
@@ -31,8 +30,6 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysisResult, docum
         return <RiskAnalysisView {...commonProps} />;
       case TABS.NEGOTIATION_HELPER:
         return <NegotiationHelperView {...commonProps} />;
-      case TABS.IMPACT_SIMULATOR:
-        return <ImpactSimulatorView documentText={documentText} onError={onError} />;
       case TABS.KEY_TERMS_GLOSSARY:
         return <KeyTermsView analysisResult={analysisResult} />;
       case TABS.KEY_DATES:

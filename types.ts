@@ -15,6 +15,13 @@ export interface ClauseAnalysis {
     suggestedRewrite?: string;
 }
 
+export interface ModifiedClause extends ClauseAnalysis {
+    userChoice: 'keep_original' | 'use_ai' | 'use_custom';
+    customText?: string;
+    finalText: string;
+    isModified: boolean;
+}
+
 export interface KeyTerm {
     term: string;
     definition: string;
