@@ -43,7 +43,8 @@ const analyzeChunk = async (
         '- simplifiedExplanation: 1–2 short sentences in plain language. If helpful, add one tiny example starting with "Example:".\n' +
         '- riskReason (Potential Risk): 1–2 short sentences saying what could go wrong. If helpful, add one tiny example starting with "Example:".\n' +
         "- negotiationSuggestion: 1 short sentence suggesting a safer tweak (or say it is fair).\n" +
-        "Return JSON only with a clauses array of objects: { clauseText, simplifiedExplanation, riskLevel in [Low, Medium, High, Negligible], riskReason, negotiationSuggestion }.",
+        "- suggestedRewrite: a safer, balanced rewrite of clauseText. Keep original meaning where possible. Short and clear.\n" +
+        "Return JSON only with a clauses array of objects: { clauseText, simplifiedExplanation, riskLevel in [Low, Medium, High, Negligible], riskReason, negotiationSuggestion, suggestedRewrite }.",
     },
     {
       role: "user",

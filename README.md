@@ -1,19 +1,65 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# UnBind – AI Legal Contract Analyzer (Groq + RAG)
 
-# Run and deploy your AI Studio app
+UnBind is a lightweight, client-side web app that analyzes legal contracts using Retrieval-Augmented Generation (RAG) with Groq. It extracts clauses, explains risks in plain English, identifies key terms/dates, and runs scenario simulations grounded in the actual document text.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1HemfGJ4cVGhrDYkbFss9RhHOv6E2Tz03
+- Document upload: PDF and plain text
+- Clause extraction with simplified explanations
+- Conservative risk labels (Negligible / Low / Medium / High)
+- Missing-clause suggestions by contract type
+- Key terms and key dates extraction
+- Impact Simulator: scenario Q&A grounded by vector retrieval
+- Analysis history stored locally (no backend)
 
-## Run Locally
+## Tech stack
 
-**Prerequisites:** Node.js
+- Vite + React + TypeScript
+- Groq (chat completions + OpenAI-compatible embeddings)
+- Client-side vector retrieval (cosine similarity)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `VITE_GROQ_API_KEY` in `.env.local` to your Groq API key
-3. Run the app:
-   `npm run dev`
+## Quick start
+
+1. Create an env file in the project root:
+
+Path: ./.env.local
+
+```bash
+VITE_GROQ_API_KEY=your_groq_key
+```
+
+2. Install and run
+
+```bash
+npm install
+npm run dev
+```
+
+Open the printed URL (typically http://localhost:5173).
+
+## How it works (RAG)
+
+1. Extract text (PDF via pdf.js, or plain text).
+2. Chunk the document with overlap.
+3. Compute embeddings (Groq OpenAI-compatible embeddings) and retrieve top-k relevant chunks for queries.
+4. Use Groq chat completions to: a) extract clause analyses, b) synthesize a report, c) answer scenario questions with retrieved context.
+
+## Environment
+
+- The app runs fully client-side. Do not commit your real key; use `.env.local`.
+- For production, consider moving LLM/embeddings behind a server to protect keys and add rate limiting.
+
+## Notes on risk labeling
+
+Prompts are tuned to be conservative and avoid false positives. Standard/neutral clauses default to “Negligible.” Risks should cite a concrete mechanism and consequence.
+
+## Roadmap ideas
+
+- Hide “Negligible” risks toggle and sensitivity control
+- Redline generator for risky clauses
+- Multi-document comparison and policy checks
+- PDF export with highlighted clauses
+
+## License
+
+For hackathon/demo use. Replace with your preferred license if needed.

@@ -14,6 +14,7 @@ import LoginView from "./components/auth/LoginView";
 import SignupView from "./components/auth/SignupView";
 import DashboardView from "./components/DashboardView";
 import LandingPage from "./components/LandingPage";
+import ErrorMessage from "./components/ErrorMessage";
 import * as authService from "./services/authService";
 import { analyzeContract } from "./services/analysisService";
 import type { StoredAnalysis, User } from "./types";
@@ -37,7 +38,7 @@ function AppRoutes() {
 
   const navigate = useNavigate();
 
-  // ✅ Load user from localStorage or backend on startup
+  // Load user from localStorage or backend on startup
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -63,12 +64,12 @@ function AppRoutes() {
     fetchUser();
   }, []);
 
-  // ✅ Handle login via backend
+  // Login handler
   const handleLogin = async (email: string, password: string) => {
     try {
       const user = await authService.login(email, password);
       setCurrentUser(user);
-      localStorage.setItem("user", JSON.stringify(user)); // ✅ Save to localStorage
+      localStorage.setItem("user", JSON.stringify(user));
       const analyses = authService.getUserAnalyses(user.id);
       setUserAnalyses(analyses);
       navigate("/dashboard");
@@ -77,16 +78,12 @@ function AppRoutes() {
     }
   };
 
-  // ✅ Handle signup via backend
-  const handleSignup = async (
-    username: string,
-    email: string,
-    password: string
-  ) => {
+  // Signup handler
+  const handleSignup = async (username: string, email: string, password: string) => {
     try {
       const user = await authService.signup(username, email, password);
       setCurrentUser(user);
-      localStorage.setItem("user", JSON.stringify(user)); // ✅ Save to localStorage
+      localStorage.setItem("user", JSON.stringify(user));
       const analyses = authService.getUserAnalyses(user.id);
       setUserAnalyses(analyses);
       navigate("/dashboard");
@@ -95,17 +92,17 @@ function AppRoutes() {
     }
   };
 
-  // ✅ Logout backend + clear state
+  // Logout handler
   const handleLogout = async () => {
     await authService.logout();
-    localStorage.removeItem("user"); // ✅ Clear storage
+    localStorage.removeItem("user");
     setCurrentUser(null);
     setUserAnalyses([]);
     setCurrentAnalysis(null);
     navigate("/");
   };
 
-  // ✅ Analysis handling
+  // Analysis handling
   const handleStartAnalysis = useCallback(
     async (file: File, role: string) => {
       if (!currentUser) {
@@ -196,39 +193,53 @@ function AppRoutes() {
     [currentUser, navigate]
   );
 
+  const handleViewAnalysis = (analysis: StoredAnalysis) => {
+    setCurrentAnalysis(analysis);
+    navigate("/analysis");
+  };
+
+  const handleReset = () => {
+    setError(null);
+    setCurrentAnalysis(null);
+    if (currentUser) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
-    <>
+    <div className="min-h-screen font-sans">
       <Header
         user={currentUser}
-        onReset={() => navigate("/")}
+        onReset={handleReset}
         onLogout={handleLogout}
         onLoginClick={() => navigate("/login")}
         onSignupClick={() => navigate("/signup")}
       />
-
       <main className="container mx-auto px-4 py-10 max-w-7xl">
         {isLoading && <LoadingSpinner message={loadingMessage} />}
+        {!isLoading && error && (
+          <ErrorMessage
+            message={error}
+            onRetry={() => {
+              setError(null);
+              if (currentUser) navigate("/dashboard");
+              else navigate("/");
+            }}
+          />
+        )}
 
-        {!isLoading && (
+        {!isLoading && !error && (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route
               path="/login"
-              element={
-                <LoginView
-                  onLogin={handleLogin}
-                  onSwitchToSignup={() => navigate("/signup")}
-                />
-              }
+              element={<LoginView onLogin={handleLogin} onSwitchToSignup={() => navigate("/signup")} />}
             />
             <Route
               path="/signup"
-              element={
-                <SignupView
-                  onSignup={handleSignup}
-                  onSwitchToLogin={() => navigate("/login")}
-                />
-              }
+              element={<SignupView onSignup={handleSignup} onSwitchToLogin={() => navigate("/login")} />}
             />
             <Route
               path="/dashboard"
@@ -237,10 +248,7 @@ function AppRoutes() {
                   <DashboardView
                     user={currentUser}
                     analyses={userAnalyses}
-                    onSelectAnalysis={(a) => {
-                      setCurrentAnalysis(a);
-                      navigate("/analysis");
-                    }}
+                    onSelectAnalysis={handleViewAnalysis}
                     onNewAnalysis={() => navigate("/upload")}
                   />
                 ) : (
@@ -252,7 +260,7 @@ function AppRoutes() {
               path="/upload"
               element={
                 currentUser ? (
-                  <FileUpload onStartAnalysis={handleStartAnalysis} />
+                  <FileUpload onStartAnalysis={handleStartAnalysis} onBack={() => navigate("/dashboard")} />
                 ) : (
                   <Navigate to="/login" replace />
                 )
@@ -284,7 +292,7 @@ function AppRoutes() {
           <p>UnBind: AI Legal Contract Analyzer</p>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 
