@@ -1,237 +1,65 @@
-# UnBind - Legal Document Analysis Platform
+# UnBind – AI Legal Contract Analyzer (Groq + RAG)
 
-## Project Overview
-
-UnBind is an AI-powered legal document analysis application that uses RAG (Retrieval-Augmented Generation) technology to simplify complex legal documents into easy-to-understand explanations. Built for the Recursive v2 Hackathon, this platform combines modern web technologies with advanced AI capabilities.
+UnBind is a lightweight, client-side web app that analyzes legal contracts using Retrieval-Augmented Generation (RAG) with Groq. It extracts clauses, explains risks in plain English, identifies key terms/dates, and runs scenario simulations grounded in the actual document text.
 
 ## Features
 
-### Core Features
-- **Document Upload & Management**: Support for PDF, DOCX, DOC, and TXT files
-- **AI-Powered Analysis**: Uses GROQ API and RAG technology for document understanding
-- **User Authentication**: Secure login/signup system with JWT tokens
-- **Responsive UI**: Modern, professional interface built with Next.js and Tailwind CSS
-- **Real-time Processing**: Document analysis with progress tracking
+- Document upload: PDF and plain text
+- Clause extraction with simplified explanations
+- Conservative risk labels (Negligible / Low / Medium / High)
+- Missing-clause suggestions by contract type
+- Key terms and key dates extraction
+- Impact Simulator: scenario Q&A grounded by vector retrieval
+- Analysis history stored locally (no backend)
 
-### Technical Features
-- **RAG Implementation**: Document chunking, vector embeddings, and similarity search
-- **FastAPI Backend**: High-performance Python backend with automatic API documentation
-- **Next.js Frontend**: React-based frontend with TypeScript and modern patterns
-- **Database Integration**: PostgreSQL with Supabase for data persistence
-- **File Processing**: Support for multiple document formats with text extraction
+## Tech stack
 
-## Tech Stack
+- Vite + React + TypeScript
+- Groq (chat completions + OpenAI-compatible embeddings)
+- Client-side vector retrieval (cosine similarity)
 
-### Backend
-- **FastAPI**: Modern Python web framework
-- **SQLAlchemy**: Database ORM
-- **GROQ API**: AI model integration
-- **LangChain**: RAG framework
-- **ChromaDB**: Vector database
-- **PostgreSQL**: Primary database
-- **Redis**: Caching and session storage
+## Quick start
 
-### Frontend
-- **Next.js 14**: React framework with App Router
-- **TypeScript**: Type-safe JavaScript
-- **Tailwind CSS**: Utility-first CSS framework
-- **React Hook Form**: Form management
-- **React Dropzone**: File upload handling
-- **Lucide React**: Icon library
+1. Create an env file in the project root:
 
-### Infrastructure
-- **Docker**: Containerization
-- **Docker Compose**: Multi-service orchestration
-- **Supabase**: Database and authentication services
+Path: ./.env.local
 
-## Project Structure
-
-```
-UnBind/
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── api/v1/         # API endpoints
-│   │   ├── core/           # Configuration and utilities
-│   │   ├── models/         # Database models
-│   │   ├── schemas/        # Pydantic schemas
-│   │   └── services/       # Business logic (RAG, etc.)
-│   ├── requirements.txt    # Python dependencies
-│   └── Dockerfile         # Backend container
-├── frontend/               # Next.js frontend
-│   ├── app/               # App Router pages
-│   ├── components/        # Reusable components
-│   ├── package.json       # Node.js dependencies
-│   └── Dockerfile         # Frontend container
-├── shared/                 # Shared types and utilities
-│   ├── types/             # TypeScript interfaces
-│   └── utils/             # Common utilities
-├── docker-compose.yml      # Development environment
-├── package.json           # Root workspace config
-└── README.md              # This file
-```
-
-## Quick Start
-
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
-
-### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd UnBind
+VITE_GROQ_API_KEY=your_groq_key
 ```
 
-### 2. Environment Setup
+2. Install and run
+
 ```bash
-# Copy environment template
-cp env.example .env
-
-# Edit .env with your API keys and configuration
-# Required variables:
-# - GROQ_API_KEY: Your GROQ API key
-# - SUPABASE_URL: Your Supabase project URL
-# - SUPABASE_ANON_KEY: Your Supabase anonymous key
-# - JWT_SECRET: Random secret for JWT tokens
-```
-
-### 3. Start with Docker (Recommended)
-```bash
-# Install dependencies and start all services
-npm run install:all
-
-# Start the development environment
-npm run dev
-
-# This will start:
-# - Frontend: http://localhost:3000
-# - Backend: http://localhost:8000
-# - Database: localhost:5432
-# - Redis: localhost:6379
-```
-
-### 4. Local Development Setup
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Frontend (in another terminal)
-cd frontend
 npm install
 npm run dev
 ```
 
-## API Documentation
+Open the printed URL (typically http://localhost:5173).
 
-Once the backend is running, you can access:
-- **Interactive API Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+## How it works (RAG)
 
-### Key Endpoints
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User authentication
-- `POST /api/v1/documents/upload` - Document upload
-- `POST /api/v1/documents/{id}/analyze` - Trigger document analysis
-- `GET /api/v1/documents` - List user documents
+1. Extract text (PDF via pdf.js, or plain text).
+2. Chunk the document with overlap.
+3. Compute embeddings (Groq OpenAI-compatible embeddings) and retrieve top-k relevant chunks for queries.
+4. Use Groq chat completions to: a) extract clause analyses, b) synthesize a report, c) answer scenario questions with retrieved context.
 
-## RAG Implementation
+## Environment
 
-The RAG (Retrieval-Augmented Generation) system works as follows:
+- The app runs fully client-side. Do not commit your real key; use `.env.local`.
+- For production, consider moving LLM/embeddings behind a server to protect keys and add rate limiting.
 
-1. **Document Processing**: Documents are chunked into smaller segments
-2. **Embedding Generation**: Text chunks are converted to vector embeddings
-3. **Vector Storage**: Embeddings are stored in ChromaDB for similarity search
-4. **Query Processing**: User queries are converted to embeddings
-5. **Retrieval**: Similar document chunks are retrieved from the vector database
-6. **Generation**: GROQ API generates simplified explanations using retrieved context
+## Notes on risk labeling
 
-## Database Schema
+Prompts are tuned to be conservative and avoid false positives. Standard/neutral clauses default to “Negligible.” Risks should cite a concrete mechanism and consequence.
 
-### Users Table
-- `id`: Primary key
-- `email`: Unique email address
-- `password_hash`: Encrypted password
-- `first_name`, `last_name`: User information
-- `is_active`, `is_verified`: Account status flags
+## Roadmap ideas
 
-### Documents Table
-- `id`: Primary key
-- `user_id`: Foreign key to users
-- `filename`: Stored filename
-- `original_filename`: Original filename
-- `file_path`: File storage path
-- `status`: Document processing status
-
-### Analyses Table
-- `id`: Primary key
-- `document_id`: Foreign key to documents
-- `analysis_type`: Type of analysis performed
-- `simplified_text`: AI-generated simplified explanation
-- `confidence_score`: Analysis confidence (0-100)
-
-## Development Workflow
-
-### Adding New Features
-1. Create feature branch from `main`
-2. Implement backend API endpoints
-3. Add frontend components and pages
-4. Update shared types if needed
-5. Test thoroughly
-6. Submit pull request
-
-### Code Quality
-- Use TypeScript throughout the frontend
-- Follow FastAPI best practices
-- Implement proper error handling
-- Add comprehensive logging
-- Write unit tests for critical functions
-
-## Deployment
-
-### Production Considerations
-- Use environment-specific configurations
-- Implement proper logging and monitoring
-- Set up CI/CD pipelines
-- Configure SSL certificates
-- Implement rate limiting
-- Set up backup strategies
-
-### Environment Variables
-```bash
-# Production environment variables
-NODE_ENV=production
-DATABASE_URL=your_production_db_url
-GROQ_API_KEY=your_production_groq_key
-SUPABASE_URL=your_production_supabase_url
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- Hide “Negligible” risks toggle and sensitivity control
+- Redline generator for risky clauses
+- Multi-document comparison and policy checks
+- PDF export with highlighted clauses
 
 ## License
 
-This project is built for the Recursive v2 Hackathon. Please refer to the hackathon guidelines for usage rights.
-
-## Support
-
-For questions or issues:
-- Check the API documentation at `/docs`
-- Review the codebase structure
-- Open an issue in the repository
-
-## Future Enhancements
-
-- **OAuth Integration**: Google, GitHub authentication
-- **Advanced Analysis**: Risk assessment, compliance checking
-- **Collaboration**: Document sharing and team features
-- **Export Options**: PDF, DOCX export of analyses
-- **Mobile App**: React Native mobile application
-- **API Rate Limiting**: Usage-based pricing tiers
+For hackathon/demo use. Replace with your preferred license if needed.
