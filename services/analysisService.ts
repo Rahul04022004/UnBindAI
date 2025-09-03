@@ -1,5 +1,11 @@
 import { embedTexts, chatComplete } from "./groqService";
-import type { AnalysisResponse, ClauseAnalysis, MissingClause, ChunkSummary, RiskLevel } from "../types";
+import type {
+  AnalysisResponse,
+  ClauseAnalysis,
+  MissingClause,
+  ChunkSummary,
+  RiskLevel,
+} from "../types";
 import { processPdfText } from "./pdfProcessingService";
 import { convertPdfToMarkdown } from "./pdfToMarkdownService";
 
@@ -29,18 +35,18 @@ const chunkText = (text: string, chunkSize = 4000, overlap = 300): string[] => {
 
   // Step 1: Normalize whitespace and clean up the text
   const normalizedText = text
-    .replace(/\r\n/g, '\n')           // Normalize line endings
-    .replace(/\r/g, '\n')             // Handle old Mac line endings
-    .replace(/\n{3,}/g, '\n\n')       // Collapse multiple newlines to double newlines
-    .replace(/[ \t]+/g, ' ')          // Normalize spaces and tabs
+    .replace(/\r\n/g, "\n") // Normalize line endings
+    .replace(/\r/g, "\n") // Handle old Mac line endings
+    .replace(/\n{3,}/g, "\n\n") // Collapse multiple newlines to double newlines
+    .replace(/[ \t]+/g, " ") // Normalize spaces and tabs
     .trim();
 
   // Step 2: Split into semantic sections (paragraphs, headings, lists)
   const sections = splitIntoSemanticSections(normalizedText);
-  
+
   // Step 3: Group sections into chunks respecting size limits
   const chunks = groupSectionsIntoChunks(sections, chunkSize, overlap);
-  
+
   return chunks;
 };
 
@@ -49,14 +55,14 @@ const chunkText = (text: string, chunkSize = 4000, overlap = 300): string[] => {
  */
 const splitIntoSemanticSections = (text: string): string[] => {
   const sections: string[] = [];
-  
+
   // Split by double newlines (paragraph boundaries)
   const paragraphs = text.split(/\n\s*\n/);
-  
+
   for (const paragraph of paragraphs) {
     const trimmed = paragraph.trim();
     if (!trimmed) continue;
-    
+
     // Check if this looks like a heading (short line, possibly numbered, all caps, etc.)
     if (isLikelyHeading(trimmed)) {
       sections.push(trimmed);
@@ -66,7 +72,7 @@ const splitIntoSemanticSections = (text: string): string[] => {
       sections.push(...subSections);
     }
   }
-  
+
   return sections;
 };
 
@@ -74,11 +80,11 @@ const splitIntoSemanticSections = (text: string): string[] => {
  * Determines if a text segment is likely a heading
  */
 const isLikelyHeading = (text: string): boolean => {
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   if (lines.length > 3) return false; // Headings are typically short
-  
+
   const firstLine = lines[0].trim();
-  
+
   // Check various heading patterns
   return (
     // Numbered sections (1., 1.1, 1.1.1, etc.)
@@ -88,11 +94,15 @@ const isLikelyHeading = (text: string): boolean => {
     // Lettered sections (A., B., C., etc.)
     /^[A-Z]\.?\s/.test(firstLine) ||
     // All caps (but not too long)
-    (firstLine === firstLine.toUpperCase() && firstLine.length < 100 && firstLine.length > 3) ||
+    (firstLine === firstLine.toUpperCase() &&
+      firstLine.length < 100 &&
+      firstLine.length > 3) ||
     // Common heading keywords
-    /^(section|chapter|part|article|clause|schedule|appendix|exhibit)\s+\d+/i.test(firstLine) ||
+    /^(section|chapter|part|article|clause|schedule|appendix|exhibit)\s+\d+/i.test(
+      firstLine
+    ) ||
     // Short lines that end with colon
-    (firstLine.length < 80 && firstLine.endsWith(':')) ||
+    (firstLine.length < 80 && firstLine.endsWith(":")) ||
     // Lines that are significantly shorter than average paragraph length
     (firstLine.length < 60 && lines.length === 1)
   );
@@ -103,25 +113,25 @@ const isLikelyHeading = (text: string): boolean => {
  */
 const splitParagraphIntoSections = (paragraph: string): string[] => {
   const sections: string[] = [];
-  const lines = paragraph.split('\n');
-  
+  const lines = paragraph.split("\n");
+
   // Check for list patterns
   const listPatterns = [
-    /^\s*[-•*]\s/,           // Bullet points
-    /^\s*\d+\.\s/,           // Numbered lists
-    /^\s*[a-z]\)\s/,         // Lettered lists
-    /^\s*\([a-z]\)\s/,       // Parenthesized letters
+    /^\s*[-•*]\s/, // Bullet points
+    /^\s*\d+\.\s/, // Numbered lists
+    /^\s*[a-z]\)\s/, // Lettered lists
+    /^\s*\([a-z]\)\s/, // Parenthesized letters
   ];
-  
+
   let currentSection: string[] = [];
-  
+
   for (const line of lines) {
-    const isListItem = listPatterns.some(pattern => pattern.test(line));
-    
+    const isListItem = listPatterns.some((pattern) => pattern.test(line));
+
     if (isListItem) {
       // If we have accumulated content, save it as a section
       if (currentSection.length > 0) {
-        sections.push(currentSection.join('\n'));
+        sections.push(currentSection.join("\n"));
         currentSection = [];
       }
       currentSection.push(line);
@@ -129,65 +139,69 @@ const splitParagraphIntoSections = (paragraph: string): string[] => {
       currentSection.push(line);
     }
   }
-  
+
   // Add any remaining content
   if (currentSection.length > 0) {
-    sections.push(currentSection.join('\n'));
+    sections.push(currentSection.join("\n"));
   }
-  
+
   return sections;
 };
 
 /**
  * Groups semantic sections into chunks while respecting size limits and maintaining overlap
  */
-const groupSectionsIntoChunks = (sections: string[], chunkSize: number, overlap: number): string[] => {
+const groupSectionsIntoChunks = (
+  sections: string[],
+  chunkSize: number,
+  overlap: number
+): string[] => {
   const chunks: string[] = [];
-  let currentChunk = '';
+  let currentChunk = "";
   let currentSize = 0;
-  
+
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
     const sectionSize = section.length;
-    
+
     // If adding this section would exceed chunk size
     if (currentSize + sectionSize > chunkSize && currentChunk) {
       // Save current chunk
       chunks.push(currentChunk.trim());
-      
+
       // Start new chunk with overlap from previous chunk
       const overlapText = getOverlapText(currentChunk, overlap);
-      currentChunk = overlapText + (overlapText ? '\n\n' : '') + section;
+      currentChunk = overlapText + (overlapText ? "\n\n" : "") + section;
       currentSize = currentChunk.length;
     } else {
       // Add section to current chunk
       if (currentChunk) {
-        currentChunk += '\n\n' + section;
+        currentChunk += "\n\n" + section;
       } else {
         currentChunk = section;
       }
       currentSize = currentChunk.length;
     }
-    
+
     // If a single section is too large, split it further
     if (sectionSize > chunkSize) {
       const subChunks = splitLargeSection(section, chunkSize, overlap);
       // Replace the current chunk with the first sub-chunk
       currentChunk = subChunks[0];
       currentSize = currentChunk.length;
-      
+
       // Add remaining sub-chunks
       for (let j = 1; j < subChunks.length; j++) {
         chunks.push(subChunks[j]);
       }
     }
   }
-  
+
   // Add final chunk if it has content
   if (currentChunk.trim()) {
     chunks.push(currentChunk.trim());
   }
-  
+
   return chunks;
 };
 
@@ -196,16 +210,16 @@ const groupSectionsIntoChunks = (sections: string[], chunkSize: number, overlap:
  */
 const getOverlapText = (text: string, overlapSize: number): string => {
   if (text.length <= overlapSize) return text;
-  
+
   // Try to find a good break point within the overlap area
   const overlapArea = text.slice(-overlapSize * 1.5); // Look in a slightly larger area
   const lastSentence = overlapArea.match(/[.!?]\s+[A-Z]/);
-  
+
   if (lastSentence) {
     const sentenceEnd = text.lastIndexOf(lastSentence[0]) + 1;
     return text.slice(sentenceEnd).trim();
   }
-  
+
   // Fallback: just take the last overlapSize characters
   return text.slice(-overlapSize);
 };
@@ -213,37 +227,44 @@ const getOverlapText = (text: string, overlapSize: number): string => {
 /**
  * Splits a large section into smaller chunks with overlap
  */
-const splitLargeSection = (section: string, chunkSize: number, overlap: number): string[] => {
+const splitLargeSection = (
+  section: string,
+  chunkSize: number,
+  overlap: number
+): string[] => {
   const chunks: string[] = [];
   let start = 0;
-  
+
   while (start < section.length) {
     let end = start + chunkSize;
-    
+
     // Try to find a good break point near the end
     if (end < section.length) {
-      const searchArea = section.slice(start + chunkSize - overlap, end + overlap);
+      const searchArea = section.slice(
+        start + chunkSize - overlap,
+        end + overlap
+      );
       const breakPoints = [
-        searchArea.lastIndexOf('\n\n'),  // Paragraph break
-        searchArea.lastIndexOf('\n'),    // Line break
-        searchArea.lastIndexOf('. '),    // Sentence break
-        searchArea.lastIndexOf(', '),    // Clause break
-      ].filter(pos => pos !== -1);
-      
+        searchArea.lastIndexOf("\n\n"), // Paragraph break
+        searchArea.lastIndexOf("\n"), // Line break
+        searchArea.lastIndexOf(". "), // Sentence break
+        searchArea.lastIndexOf(", "), // Clause break
+      ].filter((pos) => pos !== -1);
+
       if (breakPoints.length > 0) {
         const bestBreak = Math.max(...breakPoints);
         end = start + chunkSize - overlap + bestBreak;
       }
     }
-    
+
     const chunk = section.slice(start, end).trim();
     if (chunk) {
       chunks.push(chunk);
     }
-    
+
     start = end - overlap; // Apply overlap
   }
-  
+
   return chunks;
 };
 
@@ -296,11 +317,11 @@ const synthesizeReport = async (
   chunkSummaries: any[];
 }> => {
   const roleInstruction = `The user's role is: ${role}. Generate a comprehensive summary and extract all relevant information from their perspective.`;
-  
+
   // Separate clauses by risk level for better analysis
-  const negligibleClauses = clauses.filter(c => c.riskLevel === 'Negligible');
-  const riskClauses = clauses.filter(c => c.riskLevel !== 'Negligible');
-  
+  const negligibleClauses = clauses.filter((c) => c.riskLevel === "Negligible");
+  const riskClauses = clauses.filter((c) => c.riskLevel !== "Negligible");
+
   const clauseContext = clauses
     .map(
       (c, i) =>
@@ -339,12 +360,12 @@ const synthesizeReport = async (
     chunkSummaries: any[];
   }>(output);
   if (!parsed) throw new Error("Failed to parse synthesis JSON");
-  
+
   // Ensure chunkSummaries exists
   if (!parsed.chunkSummaries) {
     parsed.chunkSummaries = [];
   }
-  
+
   return parsed;
 };
 
@@ -357,20 +378,22 @@ const createChunkSummaries = async (
   role: string
 ): Promise<ChunkSummary[]> => {
   const chunkSummaries: ChunkSummary[] = [];
-  
+
   // Group clauses by chunk (this is approximate since we don't track which chunk each clause came from)
   const clausesPerChunk = Math.ceil(clauses.length / chunks.length);
-  
+
   for (let i = 0; i < chunks.length; i++) {
     const startIndex = i * clausesPerChunk;
     const endIndex = Math.min(startIndex + clausesPerChunk, clauses.length);
     const chunkClauses = clauses.slice(startIndex, endIndex);
-    
+
     const roleInstruction = `The user's role is: ${role}. Summarize what this chunk covers.`;
     const clauseContext = chunkClauses
-      .map(c => `- ${c.clauseText.substring(0, 100)}... (Risk: ${c.riskLevel})`)
-      .join('\n');
-    
+      .map(
+        (c) => `- ${c.clauseText.substring(0, 100)}... (Risk: ${c.riskLevel})`
+      )
+      .join("\n");
+
     const output = await chatComplete([
       {
         role: "system",
@@ -381,16 +404,21 @@ const createChunkSummaries = async (
       },
       {
         role: "user",
-        content: `${roleInstruction}\n\nCHUNK ${i + 1} CONTENT:\n${chunks[i].substring(0, 500)}...\n\nCLAUSES IN THIS CHUNK:\n${clauseContext}\n\nProvide a simple summary of what this chunk covers.`,
+        content: `${roleInstruction}\n\nCHUNK ${i + 1} CONTENT:\n${chunks[
+          i
+        ].substring(
+          0,
+          500
+        )}...\n\nCLAUSES IN THIS CHUNK:\n${clauseContext}\n\nProvide a simple summary of what this chunk covers.`,
       },
     ]);
-    
+
     chunkSummaries.push({
       chunkIndex: i + 1,
-      summary: output.trim()
+      summary: output.trim(),
     });
   }
-  
+
   return chunkSummaries;
 };
 
@@ -411,7 +439,7 @@ export const analyzeContractWithSemanticChunking = async (
   } = {}
 ): Promise<AnalysisResponse> => {
   onProgress("Processing document with semantic chunking...");
-  
+
   // Use the new semantic chunking
   const chunks = await processPdfText(documentText, {
     chunkSize: options.chunkSize || 4000,
@@ -455,42 +483,45 @@ export const analyzeContract = async (
   role: string,
   onProgress: (message: string) => void
 ): Promise<AnalysisResponse> => {
-  console.log('analyzeContract: Starting analysis', { 
-    documentLength: documentText?.length, 
-    role 
+  console.log("analyzeContract: Starting analysis", {
+    documentLength: documentText?.length,
+    role,
   });
 
   onProgress("Converting PDF to Markdown for better parsing...");
   const markdownText = convertPdfToMarkdown(documentText);
-  console.log('analyzeContract: Converted to Markdown', { 
+  console.log("analyzeContract: Converted to Markdown", {
     originalLength: documentText.length,
-    markdownLength: markdownText.length 
+    markdownLength: markdownText.length,
   });
 
   onProgress("Chunking document...");
   const chunks = chunkText(markdownText);
-  console.log('analyzeContract: Created chunks', { chunkCount: chunks.length });
+  console.log("analyzeContract: Created chunks", { chunkCount: chunks.length });
 
   onProgress(`Analyzing ${chunks.length} document section(s)...`);
   const chunkResults = await Promise.all(
     chunks.map((chunk, index) => {
-      console.log(`analyzeContract: Analyzing chunk ${index + 1}/${chunks.length}`, { 
-        chunkLength: chunk.length 
-      });
+      console.log(
+        `analyzeContract: Analyzing chunk ${index + 1}/${chunks.length}`,
+        {
+          chunkLength: chunk.length,
+        }
+      );
       return analyzeChunk(chunk, role);
     })
   );
   const allClauses = chunkResults.flat();
-  console.log('analyzeContract: Analysis complete', { 
+  console.log("analyzeContract: Analysis complete", {
     totalClauses: allClauses.length,
     clausesByRisk: allClauses.reduce((acc, clause) => {
       acc[clause.riskLevel] = (acc[clause.riskLevel] || 0) + 1;
       return acc;
-    }, {} as Record<string, number>)
+    }, {} as Record<string, number>),
   });
 
   if (allClauses.length === 0) {
-    console.error('analyzeContract: No clauses found');
+    console.error("analyzeContract: No clauses found");
     throw new Error(
       "No legal clauses were identified in the document. It might be too short or in an unsupported format."
     );
@@ -508,12 +539,12 @@ export const analyzeContract = async (
     chunkSummaries: chunkSummaries,
   };
 
-  console.log('analyzeContract: Final result', { 
+  console.log("analyzeContract: Final result", {
     summaryLength: result.summary?.length,
     keyTermsCount: result.keyTerms?.length,
     keyDatesCount: result.keyDates?.length,
     missingClausesCount: result.missingClauses?.length,
-    chunkSummariesCount: result.chunkSummaries?.length
+    chunkSummariesCount: result.chunkSummaries?.length,
   });
 
   return result;
