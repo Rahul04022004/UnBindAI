@@ -1,63 +1,63 @@
 export enum RiskLevel {
-  Low = "Low",
-  Medium = "Medium",
-  High = "High",
-  Negligible = "Negligible",
-  NoRisk = "No Risk",
+    Low = 'Low',
+    Medium = 'Medium',
+    High = 'High',
+    Negligible = 'Negligible',
+    NoRisk = 'No Risk',
 }
 
 export interface ClauseAnalysis {
-  clauseText: string;
-  simplifiedExplanation: string;
-  riskLevel: RiskLevel;
-  riskReason: string;
-  negotiationSuggestion: string;
-  suggestedRewrite?: string;
+    clauseText: string;
+    simplifiedExplanation: string;
+    riskLevel: RiskLevel;
+    riskReason: string;
+    negotiationSuggestion: string;
+    suggestedRewrite?: string;
 }
 
 export interface KeyTerm {
-  term: string;
-  definition: string;
+    term: string;
+    definition: string;
 }
 
 export interface KeyDate {
-  date: string;
-  description: string;
+    date: string;
+    description: string;
 }
 
 export interface MissingClause {
-  clauseName: string;
-  reason: string;
+    clauseName: string;
+    reason: string;
 }
 
 export interface ChunkSummary {
-  chunkIndex: number;
-  summary: string;
+    chunkIndex: number;
+    summary: string;
 }
 
 export interface AnalysisResponse {
-  summary: string;
-  clauses: ClauseAnalysis[];
-  keyTerms: KeyTerm[];
-  keyDates: KeyDate[];
-  missingClauses: MissingClause[];
-  chunkSummaries?: ChunkSummary[];
+    summary: string;
+    clauses: ClauseAnalysis[];
+    keyTerms: KeyTerm[];
+    keyDates: KeyDate[];
+    missingClauses: MissingClause[];
+    chunkSummaries?: ChunkSummary[];
 }
 
 // --- NEW TYPES FOR AUTH & HISTORY ---
 
 export interface User {
-  id: string;
-  username: string;
-  email: string;
-  picture?: string; // For Google profile picture
+    id: string;
+    username: string;
+    email: string;
+    picture?: string; // For Google profile picture
 }
 
 export interface StoredAnalysis {
-  id: string;
-  userId: string;
-  fileName: string;
-  analysisDate: string;
-  analysisResult: AnalysisResponse;
-  documentText: string;
+    id: string;
+    userId: string;
+    fileName: string;
+    analysisDate: string;
+    analysisResult: AnalysisResponse;
+    documentText: string;
 }
