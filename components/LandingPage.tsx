@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogoIcon, SparklesIcon, ShieldCheckIcon, FileTextIcon, DownloadIcon } from './Icons';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
 interface LandingPageProps {
   onSignupClick: () => void;
@@ -104,6 +105,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSignupClick, onLoginClick }
   );
 };
 
-export default LandingPage;
+const App = () => {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <LandingPage
+            onSignupClick={() => navigate("/signup")}
+            onLoginClick={() => navigate("/login")}
+          />
+        }
+      />
+      {/* Other routes can be defined here */}
+    </Routes>
+  );
+};
+
+export default App;
 
 

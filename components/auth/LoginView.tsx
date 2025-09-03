@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as authService from '../../services/authService';
 import { LogoIcon } from '../Icons';
 import type { User } from '../../types';
 
-interface LoginViewProps {
-    onLogin: (user: User) => void;
-    onSwitchToSignup: () => void;
-}
-
 // IMPORTANT: Replace this with your own Google Client ID
 const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+interface LoginViewProps {
+    onLogin: (email: string, password: string) => Promise<void>;
+    onSwitchToSignup: () => void;
+}
 
 const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleGoogleCallback = (response: any) => {
-        try {
-            const user = authService.handleGoogleLogin(response.credential);
-            onLogin(user);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Google login failed.');
-        }
+    const handleGoogleCallback = async (_response: any) => {
+        setError('Google login is not configured.');
     };
-    
+
     useEffect(() => {
         // @ts-ignore
         if (window.google) {
@@ -41,12 +37,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
         }
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         try {
-            const user = authService.login(email, password);
-            onLogin(user);
+            await onLogin(email, password);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
         }
@@ -81,7 +76,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
                                 id="email"
                                 name="email"
                                 type="email"
-                                autoComplete="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -96,7 +90,6 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
                                 id="password"
                                 name="password"
                                 type="password"
-                                autoComplete="current-password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -108,17 +101,20 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSwitchToSignup }) => {
                     {error && <p className="text-sm text-red-400">{error}</p>}
 
                     <div>
-                        <button
+                        <button 
                             type="submit"
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
                         >
                             Sign in
                         </button>
                     </div>
                 </form>
                 <p className="text-sm text-center text-gray-400">
-                    Don't have an account?{' '}
-                    <button onClick={onSwitchToSignup} className="font-medium text-indigo-400 hover:text-indigo-300">
+                    Don&apos;t have an account?{' '}
+                    <button 
+                        onClick={onSwitchToSignup} 
+                        className="font-medium text-indigo-400 hover:text-indigo-300"
+                    >
                         Sign up
                     </button>
                 </p>
