@@ -29,12 +29,18 @@ export interface MissingClause {
     reason: string;
 }
 
+export interface ChunkSummary {
+    chunkIndex: number;
+    summary: string;
+}
+
 export interface AnalysisResponse {
     summary: string;
     clauses: ClauseAnalysis[];
     keyTerms: KeyTerm[];
     keyDates: KeyDate[];
     missingClauses: MissingClause[];
+    chunkSummaries?: ChunkSummary[];
 }
 
 // --- NEW TYPES FOR AUTH & HISTORY ---
