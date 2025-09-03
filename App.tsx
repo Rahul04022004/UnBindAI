@@ -7,6 +7,7 @@ import ErrorMessage from "./components/ErrorMessage";
 import LoginView from "./components/auth/LoginView";
 import SignupView from "./components/auth/SignupView";
 import DashboardView from "./components/DashboardView";
+import LandingPage from "./components/LandingPage";
 import * as authService from "./services/authService";
 import { analyzeContract } from "./services/analysisService";
 import type { AnalysisResponse, StoredAnalysis, User } from "./types";
@@ -20,6 +21,7 @@ if (window.pdfjsLib) {
 }
 
 type View =
+  | "landing"
   | "login"
   | "signup"
   | "dashboard"
@@ -28,7 +30,7 @@ type View =
 
 export default function App(): React.ReactElement {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [view, setView] = useState<View>("login");
+  const [view, setView] = useState<View>("landing");
 
   const [userAnalyses, setUserAnalyses] = useState<StoredAnalysis[]>([]);
   const [currentAnalysis, setCurrentAnalysis] = useState<StoredAnalysis | null>(
@@ -46,7 +48,7 @@ export default function App(): React.ReactElement {
       setUserAnalyses(authService.getUserAnalyses(user.id));
       setView("dashboard");
     } else {
-      setView("login");
+      setView("landing");
     }
   }, []);
 
@@ -61,7 +63,7 @@ export default function App(): React.ReactElement {
     setCurrentUser(null);
     setUserAnalyses([]);
     setCurrentAnalysis(null);
-    setView("login");
+    setView("landing");
   };
 
   const handleStartAnalysis = useCallback(
@@ -173,7 +175,7 @@ export default function App(): React.ReactElement {
     if (currentUser) {
       setView("dashboard");
     } else {
-      setView("login");
+      setView("landing");
     }
   };
 
@@ -186,6 +188,13 @@ export default function App(): React.ReactElement {
     if (isLoading) return <LoadingSpinner message={loadingMessage} />;
 
     switch (view) {
+      case "landing":
+        return (
+          <LandingPage
+            onSignupClick={() => setView("signup")}
+            onLoginClick={() => setView("login")}
+          />
+        );
       case "login":
         return (
           <LoginView
@@ -251,6 +260,8 @@ export default function App(): React.ReactElement {
         user={currentUser}
         onReset={handleReset}
         onLogout={handleLogout}
+        onLoginClick={() => setView("login")}
+        onSignupClick={() => setView("signup")}
       />
       <main className="container mx-auto px-4 py-10 max-w-7xl">
         {renderContent()}

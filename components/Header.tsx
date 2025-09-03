@@ -7,9 +7,11 @@ interface HeaderProps {
   user: User | null;
   onReset: () => void;
   onLogout: () => void;
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onReset, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ user, onReset, onLogout, onLoginClick, onSignupClick }) => {
   return (
     <header className="py-4 px-4 sm:px-6 lg:px-8 bg-gray-900/60 backdrop-blur-lg border-b border-indigo-500/10 sticky top-0 z-10">
       <div className="container mx-auto flex justify-between items-center max-w-7xl">
@@ -37,7 +39,20 @@ const Header: React.FC<HeaderProps> = ({ user, onReset, onLogout }) => {
             </button>
           </div>
         ) : (
-            <div /> // Placeholder for non-authed state if needed
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onLoginClick}
+              className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-indigo-300 bg-white/5 border border-indigo-500/20 rounded-md hover:bg-indigo-500/10 transition-colors"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={onSignupClick}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-500 transition-colors"
+            >
+              Get started
+            </button>
+          </div>
         )}
       </div>
     </header>
